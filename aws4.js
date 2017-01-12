@@ -57,7 +57,7 @@ function RequestSigner(request, credentials) {
 }
 
 RequestSigner.prototype.matchHost = function(host) {
-  var match = (host || '').match(/([^\.]+)\.(?:([^\.]*)\.)?amazonaws\.com$/)
+  var match = (host || '').match(/([^\.]+)\.(?:([^\.]*)\.)?amazonaws\.com(\.cn)?$/)
   var hostParts = (match || []).slice(1, 3)
 
   // ES's hostParts are sometimes the other way round, if the value that is expected
@@ -80,9 +80,13 @@ RequestSigner.prototype.isSingleRegion = function() {
 
 RequestSigner.prototype.createHost = function() {
   var region = this.isSingleRegion() ? '' :
-        (this.service === 's3' && this.region !== 'us-east-1' ? '-' : '.') + this.region,
+        (this.service === 's3' && ['us-east-1', 'cn-north-1'].includes(this.region) ? '.' : '-') + this.region,
       service = this.service === 'ses' ? 'email' : this.service
-  return service + region + '.amazonaws.com'
+  if (this.region === 'cn-north-1') {
+    return service + region + '.amazonaws.com.cn'
+  } else {
+    return service + region + '.amazonaws.com'
+  }
 }
 
 RequestSigner.prototype.prepareRequest = function() {
